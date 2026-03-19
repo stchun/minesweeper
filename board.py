@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from collections import deque
 import random
+import time
 
 
 @dataclass
@@ -22,6 +23,8 @@ class Board:
         self.game_state = "playing"  # "playing", "won", "lost"
         self.first_click = True
         self.triggered_mine = None
+        self.start_time = None
+        self.elapsed_time = 0.0
         self.grid = self._init_grid()
 
     def _init_grid(self):
@@ -77,11 +80,13 @@ class Board:
 
         if self.first_click:
             self.first_click = False
+            self.start_time = time.time()
             self._place_mines(r, c)
 
         if cell.has_mine:
             cell.is_revealed = True
             self.triggered_mine = (r, c)
+            self._stop_timer()
             self.game_state = "lost"
             self._reveal_all_mines()
             return
@@ -92,6 +97,7 @@ class Board:
             cell.is_revealed = True
 
         if self.check_win():
+            self._stop_timer()
             self.game_state = "won"
 
     def _flood_fill(self, r, c):
@@ -107,6 +113,17 @@ class Board:
                     neighbor.is_revealed = True
                     if neighbor.adjacent_mines == 0:
                         queue.append((nr, nc))
+
+    def _stop_timer(self):
+        if self.start_time is not None:
+            self.elapsed_time = time.time() - self.start_time
+
+    def get_elapsed(self):
+        if self.start_time is None:
+            return 0.0
+        if self.game_state == "playing":
+            return time.time() - self.start_time
+        return self.elapsed_time
 
     def _reveal_all_mines(self):
         for r in range(self.rows):

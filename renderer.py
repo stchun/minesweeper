@@ -42,6 +42,7 @@ class Renderer:
         self.font_diff = _korean_font(12, bold=True)
         self.reset_button_rect = None
         self.difficulty_button_rects = {}
+        self.records_button_rect = None
 
     def draw(self):
         self.screen.fill(COLOR_BG)
@@ -64,7 +65,14 @@ class Renderer:
         # Mine counter
         remaining = self.board.num_mines - self.board.flag_count()
         mine_text = self.font_large.render(f"{remaining:03d}", True, (255, 0, 0), (0, 0, 0))
-        self.screen.blit(mine_text, (10, self.top_bar_height // 2 - mine_text.get_height() // 2))
+        mine_y = self.top_bar_height // 2 - mine_text.get_height() // 2
+        self.screen.blit(mine_text, (10, mine_y))
+
+        # Timer
+        elapsed = int(min(self.board.get_elapsed(), 999))
+        timer_surf = self.font_large.render(f"{elapsed:03d}", True, (255, 0, 0), (0, 0, 0))
+        timer_x = 10 + mine_text.get_width() + 10
+        self.screen.blit(timer_surf, (timer_x, mine_y))
 
         # Reset button
         btn_size = self.top_bar_height - 16
@@ -96,13 +104,27 @@ class Renderer:
     def _draw_difficulty_buttons(self):
         btn_w, btn_h, gap = 30, 28, 4
         right_margin = 8
-        total_w = len(DIFFICULTY_ORDER) * btn_w + (len(DIFFICULTY_ORDER) - 1) * gap
+        rec_btn_w = 30
+        rec_gap = 8
+        diff_total_w = len(DIFFICULTY_ORDER) * btn_w + (len(DIFFICULTY_ORDER) - 1) * gap
+        total_w = rec_btn_w + rec_gap + diff_total_w
         start_x = self.screen.get_width() - right_margin - total_w
         btn_y = self.top_bar_height // 2 - btn_h // 2
 
+        # Records button
+        rec_rect = pygame.Rect(start_x, btn_y, rec_btn_w, btn_h)
+        self.records_button_rect = rec_rect
+        pygame.draw.rect(self.screen, (192, 192, 192), rec_rect)
+        self._draw_bevel(rec_rect, 2)
+        rec_label = self.font_diff.render("기", True, (0, 0, 150))
+        self.screen.blit(rec_label, (rec_rect.centerx - rec_label.get_width() // 2,
+                                     rec_rect.centery - rec_label.get_height() // 2))
+
+        # Difficulty buttons
+        diff_start_x = start_x + rec_btn_w + rec_gap
         self.difficulty_button_rects = {}
         for i, name in enumerate(DIFFICULTY_ORDER):
-            x = start_x + i * (btn_w + gap)
+            x = diff_start_x + i * (btn_w + gap)
             rect = pygame.Rect(x, btn_y, btn_w, btn_h)
             self.difficulty_button_rects[name] = rect
 
