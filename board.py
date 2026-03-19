@@ -115,6 +115,31 @@ class Board:
                 if cell.has_mine:
                     cell.is_revealed = True
 
+    def chord(self, r, c):
+        """좌+우 동시 클릭: 공개된 숫자 셀의 깃발 수 == 숫자이면 나머지 이웃 전부 공개."""
+        if self.game_state != "playing":
+            return
+        if not (0 <= r < self.rows and 0 <= c < self.cols):
+            return
+
+        cell = self.grid[r][c]
+        if not cell.is_revealed or cell.adjacent_mines == 0:
+            return
+
+        flag_count = sum(
+            1 for nr, nc in self._neighbors(r, c)
+            if self.grid[nr][nc].is_flagged
+        )
+        if flag_count != cell.adjacent_mines:
+            return
+
+        for nr, nc in self._neighbors(r, c):
+            neighbor = self.grid[nr][nc]
+            if not neighbor.is_revealed and not neighbor.is_flagged:
+                self.reveal(nr, nc)
+                if self.game_state == "lost":
+                    return
+
     def toggle_flag(self, r, c):
         if self.game_state != "playing":
             return

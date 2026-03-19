@@ -30,7 +30,11 @@ def handle_click(event, board, renderer):
     if not (0 <= row < ROWS and 0 <= col < COLS):
         return
 
-    if event.button == 1:
+    buttons = pygame.mouse.get_pressed()  # (left, middle, right)
+
+    if buttons[0] and buttons[2]:
+        board.chord(row, col)
+    elif event.button == 1:
         board.reveal(row, col)
     elif event.button == 3:
         board.toggle_flag(row, col)
