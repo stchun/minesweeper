@@ -1,6 +1,6 @@
 # Minesweeper (Python + Pygame)
 
-맥북에서 마우스로 플레이하는 기본 지뢰찾기 게임.
+마우스로 플레이하는 python 지뢰찾기 게임.
 
 ## 실행 방법
 
