@@ -19,15 +19,29 @@ COLOR_BORDER_DARK = (128, 128, 128)
 COLOR_MINE_TRIGGERED = (255, 0, 0)
 
 
+DIFFICULTY_ORDER = ["초급", "중급", "고급"]
+
+
+def _korean_font(size, bold=False):
+    for name in ["applegothic", "apple sd gothic neo", "malgun gothic"]:
+        f = pygame.font.SysFont(name, size, bold=bold)
+        if f:
+            return f
+    return pygame.font.SysFont(None, size, bold=bold)
+
+
 class Renderer:
-    def __init__(self, screen, board, cell_size, top_bar_height):
+    def __init__(self, screen, board, cell_size, top_bar_height, current_difficulty="초급"):
         self.screen = screen
         self.board = board
         self.cell_size = cell_size
         self.top_bar_height = top_bar_height
+        self.current_difficulty = current_difficulty
         self.font = pygame.font.SysFont("Arial", cell_size // 2, bold=True)
         self.font_large = pygame.font.SysFont("Arial", top_bar_height // 2, bold=True)
+        self.font_diff = _korean_font(12, bold=True)
         self.reset_button_rect = None
+        self.difficulty_button_rects = {}
 
     def draw(self):
         self.screen.fill(COLOR_BG)
@@ -76,6 +90,39 @@ class Renderer:
         tx = btn_x + btn_size // 2 - text_surf.get_width() // 2
         ty = btn_y + btn_size // 2 - text_surf.get_height() // 2
         self.screen.blit(text_surf, (tx, ty))
+
+        self._draw_difficulty_buttons()
+
+    def _draw_difficulty_buttons(self):
+        btn_w, btn_h, gap = 30, 28, 4
+        right_margin = 8
+        total_w = len(DIFFICULTY_ORDER) * btn_w + (len(DIFFICULTY_ORDER) - 1) * gap
+        start_x = self.screen.get_width() - right_margin - total_w
+        btn_y = self.top_bar_height // 2 - btn_h // 2
+
+        self.difficulty_button_rects = {}
+        for i, name in enumerate(DIFFICULTY_ORDER):
+            x = start_x + i * (btn_w + gap)
+            rect = pygame.Rect(x, btn_y, btn_w, btn_h)
+            self.difficulty_button_rects[name] = rect
+
+            is_current = (name == self.current_difficulty)
+            color = (155, 155, 155) if is_current else (192, 192, 192)
+            pygame.draw.rect(self.screen, color, rect)
+
+            if is_current:
+                # Depressed (inverted bevel)
+                pygame.draw.line(self.screen, COLOR_BORDER_DARK, rect.topleft, (rect.right - 1, rect.top), 2)
+                pygame.draw.line(self.screen, COLOR_BORDER_DARK, rect.topleft, (rect.left, rect.bottom - 1), 2)
+                pygame.draw.line(self.screen, COLOR_BORDER_LIGHT, (rect.left, rect.bottom - 1), (rect.right - 1, rect.bottom - 1), 2)
+                pygame.draw.line(self.screen, COLOR_BORDER_LIGHT, (rect.right - 1, rect.top), (rect.right - 1, rect.bottom - 1), 2)
+            else:
+                self._draw_bevel(rect, 2)
+
+            label = name[0]  # 초, 중, 고
+            text = self.font_diff.render(label, True, (0, 0, 0))
+            self.screen.blit(text, (x + btn_w // 2 - text.get_width() // 2,
+                                    btn_y + btn_h // 2 - text.get_height() // 2))
 
     def _draw_grid(self):
         for r in range(self.board.rows):
